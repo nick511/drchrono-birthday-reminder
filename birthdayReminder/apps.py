@@ -1,5 +1,5 @@
 from django.apps import AppConfig
 
 
-class BirthdayreminderConfig(AppConfig):
+class Config(AppConfig):
     name = 'birthdayReminder'
