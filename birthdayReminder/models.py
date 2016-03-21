@@ -14,7 +14,7 @@ class Patient(models.Model):
   chart_id = models.CharField(max_length=10, default='')
   date_of_birth = models.DateField(blank=True, null=True)
   gender = models.CharField(choices=GENDER, max_length=6)
-  email = models.CharField(max_length=200, default='')
+  email = models.CharField(max_length=200, default='', blank=True)
 
 
   def __str__(self):
