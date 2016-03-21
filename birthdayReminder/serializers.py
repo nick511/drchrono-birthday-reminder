@@ -14,6 +14,8 @@ class PatientSerializer(serializers.ModelSerializer):
       serializer = PatientSerializer(model, data)
       if serializer.is_valid():
         serializer.save()
+      else:
+        print(serializer.errors)
 
       return model
 
