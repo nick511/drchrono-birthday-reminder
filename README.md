@@ -1,5 +1,8 @@
+
+python 3.x
+
 pip install -r requirements.txt
 
-python manage.py makemigrations
+
 python manage.py migrate
-python manage.py makemigrations birthdayReminder
+python manage.py installtasks
