@@ -1,2 +1,4 @@
-rest_framework
-kronos
+Django==1.9.4
+django-kronos==0.9
+djangorestframework==3.3.3
+requests==2.9.1
