@@ -1,7 +1,7 @@
 
 from rest_framework import serializers
 
-from .models import Patient
+from .models import Patient, User
 
 class PatientSerializer(serializers.ModelSerializer):
   class Meta:
@@ -10,9 +10,24 @@ class PatientSerializer(serializers.ModelSerializer):
 
   @staticmethod
   def update_from_data(data):
-      patient, created = Patient.objects.get_or_create(pk=data['id'])
-      patient = PatientSerializer(patient, data)
-      if patient.is_valid():
-        patient.save()
+      model, created = Patient.objects.get_or_create(pk=data['id'])
+      serializer = PatientSerializer(model, data)
+      if serializer.is_valid():
+        serializer.save()
 
-      return patient
+      return model
+
+
+class UserSerializer(serializers.ModelSerializer):
+  class Meta:
+      model = User
+      fields = ('id', 'doctor', 'username', 'patients_update_time', 'access_token', 'refresh_token')
+
+  @staticmethod
+  def update_from_data(data):
+      model, created = User.objects.get_or_create(doctor=data['doctor'], username=data['username'])
+      serializer = UserSerializer(model, data)
+      if serializer.is_valid():
+        serializer.save()
+
+      return model
