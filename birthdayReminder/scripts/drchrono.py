@@ -5,9 +5,12 @@ import requests
 BASE_URL = 'https://drchrono.com'
 AUTHORIZE_URL = BASE_URL + '/o/authorize/'
 
-ENDPOINT_TOKEN = '/o/token/'
-ENDPOINT_PATIENTS = '/api/patients'
-ENDPOINT_PATIENTS_SUMMARY = '/api/patients_summary'
+ENDPOINT_TOKEN = BASE_URL + '/o/token/'
+
+ENDPOINT_API = BASE_URL + '/api'
+ENDPOINT_CURRENT_USER = ENDPOINT_API + '/users/current'
+ENDPOINT_PATIENTS = ENDPOINT_API + '/patients'
+ENDPOINT_PATIENTS_SUMMARY = ENDPOINT_API + '/patients_summary'
 
 
 class DrChronoClient(object):
@@ -35,7 +38,7 @@ class DrChronoClient(object):
   # Step 3: Token exchange
   def get_token(self, code):
 
-    response = requests.post(BASE_URL + ENDPOINT_TOKEN, data={
+    response = requests.post(ENDPOINT_TOKEN, data={
         'code': code,
         'grant_type': 'authorization_code',
         'redirect_uri': self.redirect_uri,
@@ -46,34 +49,60 @@ class DrChronoClient(object):
     response.raise_for_status()
     data = response.json()
 
-    #TODO: refresh_token()
-    #access_token = data['access_token']
-    #refresh_token = data['refresh_token']
-    #expires_timestamp = datetime.datetime.now(pytz.utc) + datetime.timedelta(seconds=data['expires_in'])
+    return data
+
+
+  def refresh_token(self, refresh_token):
+    response = requests.post(ENDPOINT_TOKEN, data={
+        'refresh_token': refresh_token,
+        'grant_type': 'refresh_token',
+        'client_id': self.client_id,
+        'client_secret': self.client_secret,
+    })
+
+    response.raise_for_status()
+    data = response.json()
 
     return data
 
-  # /api/patients
-  def get_patients(self, token):
 
-    patients_url = BASE_URL + ENDPOINT_PATIENTS
-    patients = self.get_paged_data(token, patients_url)
+  # /users/current
+  def get_current_user(self, access_token):
+
+    headers = self.get_auth_headers(access_token)
+    response = requests.get(ENDPOINT_CURRENT_USER, headers=headers)
+    response.raise_for_status()
+    data = response.json()
+
+    return data
+
+
+  # /api/patients
+  def get_patients(self, access_token, filter=None):
+
+    api_url = ENDPOINT_PATIENTS
+
+    if filter:
+      params = urllib.parse.urlencode(filter)
+      api_url += '?' + urllib.parse.unquote_plus(params)
+
+    patients = self.get_paged_data(access_token, api_url)
 
     return patients
+
 
   # /api/patients_summary
-  def get_patients_summary(self, token):
+  def get_patients_summary(self, access_token):
 
-    patients_url = BASE_URL + ENDPOINT_PATIENTS_SUMMARY
-    patients = self.get_paged_data(token, patients_url)
+    patients = self.get_paged_data(access_token, ENDPOINT_PATIENTS_SUMMARY)
 
     return patients
 
 
-  def get_paged_data(self, token, data_url):
+  def get_paged_data(self, access_token, data_url):
 
     data = []
-    headers = self.get_auth_headers(token)
+    headers = self.get_auth_headers(access_token)
 
     while data_url:
       response = requests.get(data_url, headers=headers)
@@ -87,8 +116,7 @@ class DrChronoClient(object):
 
 
   # headers - Authorization
-  def get_auth_headers(self, token):
-    access_token = token['access_token']
+  def get_auth_headers(self, access_token):
     header_authorization = 'Bearer %s' % access_token
 
     return {
